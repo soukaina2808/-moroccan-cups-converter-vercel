@@ -1,268 +1,97 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Calculator, 
-  History, 
-  Info, 
-  AlertTriangle, 
-  ChevronDown, 
-  Trash2, 
-  Save, 
-  Utensils,
-  Droplets,
-  Scale
-} from 'lucide-react';
-import { INGREDIENTS, TIPS, WARNINGS } from './constants';
-import { Ingredient, IngredientType, CalculationResult } from './types';
-import { calculateToCups, calculateFromCups } from './services/calculator';
-
-const App: React.FC = () => {
-  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient>(INGREDIENTS[0]);
-  const [inputValue, setInputValue] = useState<string>('');
-  const [inputUnit, setInputUnit] = useState<'g' | 'ml' | 'cup'>('g');
-  const [history, setHistory] = useState<CalculationResult[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-
-  // Initialize input unit based on ingredient type
-  useEffect(() => {
-    if (selectedIngredient.type === IngredientType.LIQUID) {
-      if (inputUnit === 'g') setInputUnit('ml');
-    } else {
-      if (inputUnit === 'ml') setInputUnit('g');
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>محول الكأس المغربي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #faf7f2;
+      color: #4e342e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-  }, [selectedIngredient]);
-
-  const resultPhrase = useMemo(() => {
-    if (!inputValue || isNaN(Number(inputValue))) return '';
-    const val = Number(inputValue);
-    
-    if (inputUnit === 'cup') {
-      const converted = calculateFromCups(val, selectedIngredient.type);
-      const unitLabel = selectedIngredient.type === IngredientType.DRY ? 'غرام' : 'مل';
-      return `${val} كاس عنبة ≈ ${converted} ${unitLabel}`;
-    } else {
-      const phrase = calculateToCups(val, selectedIngredient.type);
-      const unitLabel = inputUnit === 'g' ? 'غرام' : 'مل';
-      return `${val} ${unitLabel} من ${selectedIngredient.ar} (${selectedIngredient.fr}) ≈ ${phrase}`;
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.1);
+      text-align: center;
     }
-  }, [inputValue, inputUnit, selectedIngredient]);
+    h1 { font-size: 20px; margin-bottom: 10px; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #d7ccc8;
+    }
+    button {
+      background: #5d4037;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-  const handleSave = () => {
-    if (!resultPhrase) return;
-    const newResult: CalculationResult = {
-      id: Math.random().toString(36).substr(2, 9),
-      ingredient: selectedIngredient,
-      inputValue: Number(inputValue),
-      inputUnit: inputUnit,
-      outputValue: resultPhrase,
-      timestamp: Date.now(),
-    };
-    setHistory([newResult, ...history]);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
+<div class="card">
+  <h1>🥄 محول الغرام إلى كأس العنبة</h1>
 
-  const clearHistory = () => {
-    setHistory([]);
-  };
+  <input id="grams" type="number" placeholder="دخّل الغرام أو المليلتر">
 
-  const randomTip = useMemo(() => TIPS[Math.floor(Math.random() * TIPS.length)], []);
-  const randomWarning = useMemo(() => WARNINGS[Math.floor(Math.random() * WARNINGS.length)], []);
+  <select id="type">
+    <option value="dry">مواد ناشفة (دقيق، سكر…)</option>
+    <option value="liquid">سوائل (حليب، زيت…)</option>
+  </select>
 
-  return (
-    <div className="min-h-screen pb-12 transition-all duration-300">
-      {/* Header */}
-      <header className="bg-[#5D4037] text-[#F5F5DC] py-8 px-4 shadow-xl text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="grid grid-cols-8 gap-2 rotate-12">
-            {[...Array(64)].map((_, i) => (
-              <Utensils key={i} size={48} />
-            ))}
-          </div>
-        </div>
-        <h1 className="arabic-title text-4xl md:text-5xl font-bold mb-2 relative z-10">الميزان المغربي الذكي</h1>
-        <p className="text-[#D4AF37] font-medium text-lg relative z-10">الحساب ديال كاس العنبة في يديك 🇲🇦</p>
-      </header>
+  <button onclick="convert()">حوّل</button>
 
-      <main className="max-w-2xl mx-auto px-4 -mt-6">
-        {/* Calculator Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border-t-4 border-[#D4AF37] relative overflow-hidden">
-          <div className="flex justify-between items-center mb-6">
-             <div className="flex items-center gap-2 text-[#5D4037]">
-                <Calculator className="text-[#D4AF37]" size={28} />
-                <h2 className="text-xl font-bold">آلة الحساب</h2>
-             </div>
-             <button 
-                onClick={() => setShowHistory(!showHistory)}
-                className="text-[#5D4037] hover:text-[#D4AF37] transition-colors flex items-center gap-1 text-sm font-semibold"
-             >
-               <History size={18} />
-               {showHistory ? 'إخفاء السجل' : 'سجل الحسابات'}
-             </button>
-          </div>
+  <div class="result" id="result"></div>
+</div>
 
-          <div className="space-y-6">
-            {/* Ingredient Selector */}
-            <div>
-              <label className="block text-[#5D4037] text-sm font-bold mb-2">اختار المكون:</label>
-              <div className="relative">
-                <select 
-                  value={selectedIngredient.id}
-                  onChange={(e) => setSelectedIngredient(INGREDIENTS.find(i => i.id === e.target.value)!)}
-                  className="w-full bg-[#FDFBF7] border-2 border-[#E0D5C1] text-[#5D4037] rounded-xl py-3 px-4 appearance-none focus:outline-none focus:border-[#D4AF37] transition-all font-medium"
-                >
-                  {INGREDIENTS.map(ing => (
-                    <option key={ing.id} value={ing.id}>
-                      {ing.ar} ({ing.fr})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#D4AF37]" size={20} />
-              </div>
-            </div>
+<script>
+  function convert() {
+    const value = Number(document.getElementById("grams").value);
+    const type = document.getElementById("type").value;
+    const result = document.getElementById("result");
 
-            {/* Input Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[#5D4037] text-sm font-bold mb-2">الكمية:</label>
-                <input 
-                  type="number" 
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="0"
-                  className="w-full bg-[#FDFBF7] border-2 border-[#E0D5C1] text-[#5D4037] rounded-xl py-3 px-4 focus:outline-none focus:border-[#D4AF37] transition-all text-center text-xl font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[#5D4037] text-sm font-bold mb-2">الوحدة:</label>
-                <div className="flex bg-[#FDFBF7] border-2 border-[#E0D5C1] rounded-xl p-1">
-                  {selectedIngredient.type === IngredientType.DRY ? (
-                    <button 
-                      onClick={() => setInputUnit('g')}
-                      className={`flex-1 py-2 rounded-lg transition-all font-bold ${inputUnit === 'g' ? 'bg-[#5D4037] text-white' : 'text-[#5D4037]'}`}
-                    >
-                      غرام (g)
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => setInputUnit('ml')}
-                      className={`flex-1 py-2 rounded-lg transition-all font-bold ${inputUnit === 'ml' ? 'bg-[#5D4037] text-white' : 'text-[#5D4037]'}`}
-                    >
-                      مل (ml)
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => setInputUnit('cup')}
-                    className={`flex-1 py-2 rounded-lg transition-all font-bold ${inputUnit === 'cup' ? 'bg-[#5D4037] text-white' : 'text-[#5D4037]'}`}
-                  >
-                    كاس
-                  </button>
-                </div>
-              </div>
-            </div>
+    if (!value || value <= 0) {
+      result.textContent = "دخل كمية صحيحة 🙏";
+      return;
+    }
 
-            {/* Result Display */}
-            {resultPhrase && (
-              <div className="mt-8 p-6 bg-[#FDFBF7] rounded-2xl border-2 border-dashed border-[#D4AF37] text-center animate-in fade-in zoom-in duration-300">
-                <p className="text-[#5D4037] text-lg font-bold mb-1">النتيجة هي:</p>
-                <p className="text-2xl md:text-3xl font-bold text-[#5D4037] mb-4 arabic-title leading-relaxed">
-                  {resultPhrase}
-                </p>
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-green-600 font-medium flex items-center gap-1">
-                    الله يعطيك الصحة، الحساب واجد 👌
-                  </p>
-                  <button 
-                    onClick={handleSave}
-                    disabled={isSaved}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all shadow-md ${isSaved ? 'bg-green-100 text-green-700' : 'bg-[#D4AF37] text-[#5D4037] hover:bg-[#C09A30]'}`}
-                  >
-                    {isSaved ? <Utensils size={18} /> : <Save size={18} />}
-                    {isSaved ? 'تم الحفظ!' : 'حفظ الحساب'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+    let cupSize = type === "dry" ? 110 : 170;
+    let cups = value / cupSize;
 
-        {/* History Section */}
-        {showHistory && (
-          <div className="mt-6 bg-white rounded-3xl shadow-xl p-6 border-t-4 border-[#5D4037] animate-in slide-in-from-top duration-500">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-[#5D4037] flex items-center gap-2">
-                <History className="text-[#D4AF37]" size={20} />
-                العمليات السابقة
-              </h3>
-              {history.length > 0 && (
-                <button 
-                  onClick={clearHistory}
-                  className="text-red-500 hover:text-red-700 transition-colors flex items-center gap-1 text-sm font-semibold"
-                >
-                  <Trash2 size={16} />
-                  مسح السجل
-                </button>
-              )}
-            </div>
-            
-            <div className="space-y-3 max-h-60 overflow-y-auto custom-scroll px-1">
-              {history.length === 0 ? (
-                <p className="text-center py-8 text-gray-400 italic">السجل خاوي، بدا الحساب دابا!</p>
-              ) : (
-                history.map(item => (
-                  <div key={item.id} className="bg-[#FDFBF7] p-3 rounded-xl border border-[#E0D5C1] text-right">
-                    <div className="flex justify-between items-start mb-1">
-                       <span className="text-[10px] text-gray-400">{new Date(item.timestamp).toLocaleTimeString('ar-MA')}</span>
-                       <span className="text-xs font-bold text-[#D4AF37]">{item.ingredient.ar}</span>
-                    </div>
-                    <p className="text-[#5D4037] font-medium text-sm">{item.outputValue}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+    let text = "";
 
-        {/* Extras: Tips & Warnings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div className="bg-[#F5F5DC] p-4 rounded-2xl border-r-4 border-[#D4AF37] shadow-sm flex items-start gap-3">
-            <div className="bg-[#D4AF37] p-2 rounded-lg text-white">
-              <Info size={20} />
-            </div>
-            <div>
-              <h4 className="font-bold text-[#5D4037] mb-1">نصيحة ذكية</h4>
-              <p className="text-sm text-[#5D4037] leading-relaxed">{randomTip}</p>
-            </div>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-2xl border-r-4 border-orange-400 shadow-sm flex items-start gap-3">
-            <div className="bg-orange-400 p-2 rounded-lg text-white">
-              <AlertTriangle size={20} />
-            </div>
-            <div>
-              <h4 className="font-bold text-orange-800 mb-1">رد بالك</h4>
-              <p className="text-sm text-orange-800 leading-relaxed">{randomWarning}</p>
-            </div>
-          </div>
-        </div>
-      </main>
+    if (cups >= 0.75) {
+      text = "≈ كأس إلا ربع 🥄";
+    } else if (cups >= 0.5) {
+      text = "≈ نصف كأس 🥄";
+    } else if (cups >= 0.25) {
+      text = "≈ ربع كأس 🥄";
+    } else {
+      text = "≈ أقل من ربع كأس";
+    }
 
-      {/* Floating Action Button for Contact/About */}
-      <footer className="fixed bottom-6 left-6 flex gap-3">
-        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg border border-[#D4AF37] text-[#5D4037] flex items-center gap-4 px-6 animate-bounce">
-           <div className="flex items-center gap-2">
-             <Scale size={18} className="text-[#D4AF37]" />
-             <span className="text-sm font-bold">110g نواشف</span>
-           </div>
-           <div className="w-px h-4 bg-[#D4AF37]/30"></div>
-           <div className="flex items-center gap-2">
-             <Droplets size={18} className="text-[#D4AF37]" />
-             <span className="text-sm font-bold">170ml سوائل</span>
-           </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
+    result.textContent = text;
+  }
+</script>
 
-export default App;
+</body>
+</html>
+
