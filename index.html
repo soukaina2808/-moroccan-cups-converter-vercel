@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+/* ================= DATA ================= */
+
 const DRY = [
   { id: "farine", ar: "الدقيق", fr: "Farine", cup: 110 },
   { id: "semolina", ar: "السميد الناعم", fr: "Semoule fine", cup: 130 },
@@ -18,19 +20,36 @@ const LIQUID = [
   { id: "oil", ar: "الزيت", fr: "Huile", cup: 170 }
 ];
 
-function formatCups(value) {
-  const cups = Math.floor(value);
-  const rest = value - cups;
+/* ================= LOGIC ================= */
 
-  let text = "";
-  if (cups > 0) text += `${cups} كأس`;
+function formatResult(value, ingredient) {
+  // حالة خاصة: الزبدة → معالق
+  if (ingredient.id === "butter" && value < 50) {
+    if (value < 10) return "≈ أقل من معلقة صغيرة";
+    if (value < 15) return "≈ معلقة صغيرة";
+    if (value < 25) return "≈ معلقة كبيرة";
+  }
 
-  if (rest >= 0.75) text += " + 3/4";
-  else if (rest >= 0.5) text += " + نصف";
-  else if (rest >= 0.25) text += " + ربع";
+  const cupsRaw = value / ingredient.cup;
+  const rounded = Math.round(cupsRaw * 4) / 4;
 
-  return text || "≈ معلقة صغيرة";
+  const cups = Math.floor(rounded);
+  const rest = rounded - cups;
+
+  let parts = [];
+
+  if (cups > 0) parts.push(`${cups} كأس عنبة`);
+
+  if (rest === 0.75) parts.push("ثلاثة أرباع");
+  else if (rest === 0.5) parts.push("نصف");
+  else if (rest === 0.25) parts.push("ربع");
+
+  return parts.length
+    ? parts.join(" و ")
+    : "≈ معلقة صغيرة";
 }
+
+/* ================= APP ================= */
 
 export default function App() {
   const [type, setType] = useState("dry");
@@ -39,72 +58,126 @@ export default function App() {
 
   const list = type === "dry" ? DRY : LIQUID;
 
-  const result = () => {
-    if (!value) return "";
-    const cups = value / ingredient.cup;
-    return formatCups(cups);
-  };
+  const result =
+    value && !isNaN(value)
+      ? formatResult(Number(value), ingredient)
+      : "";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#fdfbf7",
-      color: "#5D4037",
-      padding: "20px",
-      fontFamily: "sans-serif"
-    }}>
-      <h1 style={{ textAlign: "center" }}>🥄 شحال ندير؟ 🇲🇦</h1>
-      <p style={{ textAlign: "center", opacity: 0.8 }}>
-        Calculateur marocain بالكأس والمعالق
+    <div style={styles.page}>
+      <h1 style={styles.title}>🥄 كأس العنبة</h1>
+      <p style={styles.subtitle}>
+        Calculateur Marocain بالكأس والمعالق
       </p>
 
-      <div style={{ maxWidth: 400, margin: "auto" }}>
-        <select
-          onChange={(e) => {
-            setType(e.target.value);
-            setIngredient(e.target.value === "dry" ? DRY[0] : LIQUID[0]);
+      {/* TYPE */}
+      <div style={styles.switch}>
+        <button
+          style={type === "dry" ? styles.activeBtn : styles.btn}
+          onClick={() => {
+            setType("dry");
+            setIngredient(DRY[0]);
           }}
-          style={{ width: "100%", padding: 10, marginBottom: 10 }}
         >
-          <option value="dry">نواشف / Solides</option>
-          <option value="liquid">سوائل / Liquides</option>
-        </select>
-
-        <select
-          onChange={(e) =>
-            setIngredient(list.find(i => i.id === e.target.value))
-          }
-          style={{ width: "100%", padding: 10, marginBottom: 10 }}
+          نواشف / Solides
+        </button>
+        <button
+          style={type === "liquid" ? styles.activeBtn : styles.btn}
+          onClick={() => {
+            setType("liquid");
+            setIngredient(LIQUID[0]);
+          }}
         >
-          {list.map(i => (
-            <option key={i.id} value={i.id}>
-              {i.ar} – {i.fr}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          placeholder={type === "dry" ? "الوزن بالغرام" : "الكمية بالمل"}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          style={{ width: "100%", padding: 12, fontSize: 18 }}
-        />
-
-        {value && (
-          <div style={{
-            background: "#fff",
-            marginTop: 20,
-            padding: 15,
-            borderRadius: 10,
-            textAlign: "center"
-          }}>
-            <strong>النتيجة:</strong>
-            <p style={{ fontSize: 20, marginTop: 10 }}>{result()}</p>
-            <small>بصّحة وراحة 👌</small>
-          </div>
-        )}
+          سوائل / Liquides
+        </button>
       </div>
+
+      {/* INGREDIENT */}
+      <select
+        style={styles.select}
+        value={ingredient.id}
+        onChange={(e) =>
+          setIngredient(list.find(i => i.id === e.target.value))
+        }
+      >
+        {list.map(i => (
+          <option key={i.id} value={i.id}>
+            {i.ar} – {i.fr}
+          </option>
+        ))}
+      </select>
+
+      {/* INPUT */}
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="دخل الغرام أو المليلتر"
+        style={styles.input}
+      />
+
+      {/* RESULT */}
+      {result && (
+        <div style={styles.result}>
+          <strong>النتيجة:</strong>
+          <p style={styles.resultText}>{result}</p>
+          <small>الحساب تقريبي بحساب كأس العنبة المغربية</small>
+          <p style={styles.footer}>بصّحة وراحة 👌</p>
+        </div>
+      )}
     </div>
   );
 }
+
+/* ================= STYLE ================= */
+
+const styles = {
+  page: {
+    maxWidth: 420,
+    margin: "40px auto",
+    padding: 20,
+    fontFamily: "system-ui",
+    textAlign: "center",
+    background: "#fff8ee",
+    borderRadius: 20,
+    boxShadow: "0 10px 30px rgba(0,0,0,.1)"
+  },
+  title: { fontSize: 28, marginBottom: 5 },
+  subtitle: { color: "#8a6d3b", marginBottom: 20 },
+  switch: { display: "flex", gap: 10, marginBottom: 15 },
+  btn: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    border: "1px solid #ccc",
+    background: "#fff"
+  },
+  activeBtn: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    background: "#c9a24d",
+    color: "#fff",
+    border: "none"
+  },
+  select: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10
+  },
+  input: {
+    width: "100%",
+    padding: 12,
+    fontSize: 18,
+    borderRadius: 12,
+    marginBottom: 15
+  },
+  result: {
+    background: "#fff",
+    padding: 15,
+    borderRadius: 15
+  },
+  resultText: { fontSize: 22, margin: "10px 0" },
+  footer: { marginTop: 10, fontWeight: "bold" }
+};
