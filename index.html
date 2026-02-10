@@ -1,97 +1,89 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <title>محول الكأس المغربي</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #faf7f2;
-      color: #4e342e;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 14px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.1);
-      text-align: center;
-    }
-    h1 { font-size: 20px; margin-bottom: 10px; }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: 1px solid #d7ccc8;
-    }
-    button {
-      background: #5d4037;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
-    .result {
-      margin-top: 15px;
-      font-size: 17px;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>كأس العنبة 🇲🇦</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #faf7f2;
+  text-align: center;
+  padding: 30px;
+}
+select, input, button {
+  width: 90%;
+  max-width: 320px;
+  padding: 12px;
+  font-size: 18px;
+  margin: 8px 0;
+}
+button {
+  background: #8d6e63;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+.result {
+  margin-top: 20px;
+  font-size: 22px;
+  font-weight: bold;
+}
+small {
+  color: #555;
+}
+</style>
 </head>
+
 <body>
 
-<div class="card">
-  <h1>🥄 محول الغرام إلى كأس العنبة</h1>
+<h2>حوّل المقادير لكأس العنبة 🥄</h2>
 
-  <input id="grams" type="number" placeholder="دخّل الغرام أو المليلتر">
+<select id="ingredient">
+  <option value="flour">دقيق</option>
+  <option value="sugar">سكر</option>
+  <option value="oil">زيت</option>
+  <option value="milk">حليب</option>
+  <option value="butter">زبدة</option>
+</select>
 
-  <select id="type">
-    <option value="dry">مواد ناشفة (دقيق، سكر…)</option>
-    <option value="liquid">سوائل (حليب، زيت…)</option>
-  </select>
+<input type="number" id="amount" placeholder="دخل الغرام أو المل">
 
-  <button onclick="convert()">حوّل</button>
+<button onclick="convert()">حوّل</button>
 
-  <div class="result" id="result"></div>
-</div>
+<div class="result" id="result"></div>
+<small>الحساب تقريبي بحساب كأس العنبة المغربية</small>
 
 <script>
-  function convert() {
-    const value = Number(document.getElementById("grams").value);
-    const type = document.getElementById("type").value;
-    const result = document.getElementById("result");
+const cupValues = {
+  flour: 110,
+  sugar: 100,
+  butter: 100,
+  oil: 170,
+  milk: 170
+};
 
-    if (!value || value <= 0) {
-      result.textContent = "دخل كمية صحيحة 🙏";
-      return;
-    }
+function convert() {
+  const ing = document.getElementById("ingredient").value;
+  const val = Number(document.getElementById("amount").value);
+  const cup = cupValues[ing];
 
-    let cupSize = type === "dry" ? 110 : 170;
-    let cups = value / cupSize;
-
-    let text = "";
-
-    if (cups >= 0.75) {
-      text = "≈ كأس إلا ربع 🥄";
-    } else if (cups >= 0.5) {
-      text = "≈ نصف كأس 🥄";
-    } else if (cups >= 0.25) {
-      text = "≈ ربع كأس 🥄";
-    } else {
-      text = "≈ أقل من ربع كأس";
-    }
-
-    result.textContent = text;
+  if (!val) {
+    document.getElementById("result").innerText = "دخل الكمية أولاً 🤨";
+    return;
   }
+
+  const ratio = val / cup;
+  let text = "";
+
+  if (ratio <= 0.3) text = "≈ ربع كاس";
+  else if (ratio <= 0.6) text = "≈ نص كاس";
+  else if (ratio <= 0.85) text = "≈ كاس إلا شوية";
+  else if (ratio <= 1.1) text = "≈ كاس معمّر";
+  else text = "≈ أكثر من كاس";
+
+  document.getElementById("result").innerText = text;
+}
 </script>
 
 </body>
 </html>
-
