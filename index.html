@@ -23,7 +23,7 @@ const LIQUID = [
 /* ================= LOGIC ================= */
 
 function formatResult(value, ingredient) {
-  // حالة خاصة: الزبدة → معالق
+  // زبدة: معالق
   if (ingredient.id === "butter" && value < 50) {
     if (value < 10) return "≈ أقل من معلقة صغيرة";
     if (value < 15) return "≈ معلقة صغيرة";
@@ -31,22 +31,20 @@ function formatResult(value, ingredient) {
   }
 
   const cupsRaw = value / ingredient.cup;
-  const rounded = Math.round(cupsRaw * 4) / 4;
 
-  const cups = Math.floor(rounded);
-  const rest = rounded - cups;
+  const cups = Math.floor(cupsRaw);
+  const rest = cupsRaw - cups;
 
   let parts = [];
 
   if (cups > 0) parts.push(`${cups} كأس عنبة`);
 
-  if (rest === 0.75) parts.push("ثلاثة أرباع");
-  else if (rest === 0.5) parts.push("نصف");
-  else if (rest === 0.25) parts.push("ربع");
+  if (rest >= 0.75) parts.push("ثلاثة أرباع");
+  else if (rest >= 0.5) parts.push("نصف");
+  else if (rest >= 0.25) parts.push("ربع");
+  else if (cups === 0) return "≈ معلقة صغيرة";
 
-  return parts.length
-    ? parts.join(" و ")
-    : "≈ معلقة صغيرة";
+  return parts.join(" و ");
 }
 
 /* ================= APP ================= */
@@ -66,9 +64,7 @@ export default function App() {
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>🥄 كأس العنبة</h1>
-      <p style={styles.subtitle}>
-        Calculateur Marocain بالكأس والمعالق
-      </p>
+      <p style={styles.subtitle}>Calculateur Marocain</p>
 
       {/* TYPE */}
       <div style={styles.switch}>
@@ -121,7 +117,7 @@ export default function App() {
         <div style={styles.result}>
           <strong>النتيجة:</strong>
           <p style={styles.resultText}>{result}</p>
-          <small>الحساب تقريبي بحساب كأس العنبة المغربية</small>
+          <small>الحساب تقريبي بكأس العنبة المغربية</small>
           <p style={styles.footer}>بصّحة وراحة 👌</p>
         </div>
       )}
