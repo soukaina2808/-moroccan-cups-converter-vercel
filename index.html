@@ -1,87 +1,169 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>كأس العنبة 🇲🇦</title>
+<title>الميزان المغربي الذكي – كأس العنبة</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  background: #faf7f2;
-  text-align: center;
-  padding: 30px;
+body{
+  font-family: Tahoma, sans-serif;
+  background: linear-gradient(135deg,#fdf6ec,#f3e2c7);
+  margin:0;
+  color:#4a2c1d;
 }
-select, input, button {
-  width: 90%;
-  max-width: 320px;
-  padding: 12px;
-  font-size: 18px;
-  margin: 8px 0;
+.container{max-width:430px;margin:auto;padding:20px;}
+header{
+  background:#5d4037;
+  color:#fff;
+  padding:25px;
+  border-radius:0 0 30px 30px;
+  text-align:center;
 }
-button {
-  background: #8d6e63;
-  color: white;
-  border: none;
-  border-radius: 8px;
+header h1{margin:0;font-size:26px;}
+header p{margin-top:6px;color:#ffd54f;}
+.card{
+  background:white;
+  margin-top:-20px;
+  padding:20px;
+  border-radius:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.1);
 }
-.result {
-  margin-top: 20px;
-  font-size: 22px;
-  font-weight: bold;
+label{font-weight:bold;margin-top:15px;display:block;}
+select,input{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:12px;
+  border:2px solid #e0c097;
+  font-size:16px;
 }
-small {
-  color: #555;
+button{
+  width:100%;
+  margin-top:20px;
+  padding:14px;
+  border:none;
+  border-radius:25px;
+  background:#d4a017;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{background:#c69312;}
+.result{
+  margin-top:25px;
+  padding:18px;
+  background:#fdf6ec;
+  border:2px dashed #d4a017;
+  border-radius:18px;
+  text-align:center;
+  font-size:18px;
+}
+footer{
+  text-align:center;
+  margin-top:20px;
+  font-size:14px;
+  color:#6d4c41;
 }
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<h2>حوّل المقادير لكأس العنبة 🥄</h2>
+<header>
+  <h1>الميزان المغربي الذكي 🥄</h1>
+  <p>كأس العنبة… الحساب بلا ميزان 🇲🇦</p>
+</header>
 
-<select id="ingredient">
-  <option value="flour">دقيق</option>
-  <option value="sugar">سكر</option>
-  <option value="oil">زيت</option>
-  <option value="milk">حليب</option>
-  <option value="butter">زبدة</option>
+<div class="card">
+
+<label>شنو غادي تحسبي؟</label>
+<select id="type">
+  <option value="dry">ناشف</option>
+  <option value="liquid">سائل (ماء / حليب / زيت)</option>
 </select>
 
-<input type="number" id="amount" placeholder="دخل الغرام أو المل">
+<label>اختاري المكون (للنواشف):</label>
+<select id="ingredient">
+  <option value="110">الدقيق</option>
+  <option value="125">السكر الناعم</option>
+  <option value="150">السكر الخشن (سنيدة)</option>
+  <option value="130">السميد الناعم</option>
+  <option value="100">الكاكاو</option>
+  <option value="75">الحليب بودرة</option>
+  <option value="60">الكوك</option>
+  <option value="110">الزنجلان / السمسم</option>
+  <option value="110">اللوز</option>
+</select>
 
-<button onclick="convert()">حوّل</button>
+<label>الكمية (غرام أو ml):</label>
+<input type="number" id="amount" placeholder="مثلاً 10">
 
-<div class="result" id="result"></div>
-<small>الحساب تقريبي بحساب كأس العنبة المغربية</small>
+<label>نوع المعالق (إلا كانت الكمية قليلة):</label>
+<select id="spoon">
+  <option value="5">معلقة صغيرة 🥄</option>
+  <option value="15">معلقة كبيرة 🍴</option>
+</select>
+
+<button onclick="calculate()">احسبي دابا</button>
+
+<div id="result" class="result" style="display:none;"></div>
+
+</div>
+
+<footer>
+  بصحة وراحة 🌸 الحساب تقريبي بكأس العنبة المغربية
+</footer>
+
+</div>
 
 <script>
-const cupValues = {
-  flour: 110,
-  sugar: 100,
-  butter: 100,
-  oil: 170,
-  milk: 170
-};
+function calculate(){
+  const amount = Number(document.getElementById("amount").value);
+  const cupGram = Number(document.getElementById("ingredient").value);
+  const spoonGram = Number(document.getElementById("spoon").value);
+  const type = document.getElementById("type").value;
+  const result = document.getElementById("result");
 
-function convert() {
-  const ing = document.getElementById("ingredient").value;
-  const val = Number(document.getElementById("amount").value);
-  const cup = cupValues[ing];
-
-  if (!val) {
-    document.getElementById("result").innerText = "دخل الكمية أولاً 🤨";
+  if(!amount || amount<=0){
+    result.style.display="block";
+    result.innerHTML="دخلّي كمية معقولة 😅";
     return;
   }
 
-  const ratio = val / cup;
-  let text = "";
+  let cups;
+  let text="";
 
-  if (ratio <= 0.3) text = "≈ ربع كاس";
-  else if (ratio <= 0.6) text = "≈ نص كاس";
-  else if (ratio <= 0.85) text = "≈ كاس إلا شوية";
-  else if (ratio <= 1.1) text = "≈ كاس معمّر";
-  else text = "≈ أكثر من كاس";
+  if(type==="liquid"){
+    cups = amount / 170;
+  }else{
+    cups = amount / cupGram;
+  }
 
-  document.getElementById("result").innerText = text;
+  if(cups>=1){
+    let full=Math.floor(cups);
+    let rest=cups-full;
+    if(rest>=0.75) text=`${full} كيسان`;
+    else if(rest>=0.5) text=`${full} كاس ونص`;
+    else if(rest>=0.25) text=`${full} كاس وربع`;
+    else text=`${full} كاس`;
+  }else if(cups>=0.5){
+    text="نص كاس";
+  }else if(cups>=0.25){
+    text="ربع كاس";
+  }else{
+    let spoons=Math.round(amount/spoonGram);
+    text=`${spoons} ${spoonGram==5?"معالق صغار 🥄":"معالق كبار 🍴"}`;
+  }
+
+  result.style.display="block";
+  result.innerHTML=`
+  😍 <strong>النتيجة:</strong><br><br>
+  ≈ ${text}<br><br>
+  ${type==="liquid"?"🥛 بالحساب ديال السوائل":"🥄 بالحساب ديال النواشف"}<br>
+  بصحة وراحة… راه حتى القليل محسوب ❤️
+  `;
 }
 </script>
 
