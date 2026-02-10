@@ -1,171 +1,110 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>الميزان المغربي الذكي – كأس العنبة</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+import { useState } from "react";
 
-<style>
-body{
-  font-family: Tahoma, sans-serif;
-  background: linear-gradient(135deg,#fdf6ec,#f3e2c7);
-  margin:0;
-  color:#4a2c1d;
+const DRY = [
+  { id: "farine", ar: "الدقيق", fr: "Farine", cup: 110 },
+  { id: "semolina", ar: "السميد الناعم", fr: "Semoule fine", cup: 130 },
+  { id: "sugarFine", ar: "السكر الناعم", fr: "Sucre glace", cup: 125 },
+  { id: "sugarRough", ar: "السكر سنيدة", fr: "Sucre semoule", cup: 150 },
+  { id: "almond", ar: "اللوز", fr: "Amandes", cup: 110 },
+  { id: "sesame", ar: "الزنجلان", fr: "Sésame", cup: 110 },
+  { id: "coconut", ar: "جوز الهند", fr: "Noix de coco", cup: 60 },
+  { id: "cocoa", ar: "الكاكاو", fr: "Cacao", cup: 100 },
+  { id: "butter", ar: "الزبدة", fr: "Beurre", cup: 225 }
+];
+
+const LIQUID = [
+  { id: "water", ar: "الماء", fr: "Eau", cup: 170 },
+  { id: "milk", ar: "الحليب", fr: "Lait", cup: 170 },
+  { id: "oil", ar: "الزيت", fr: "Huile", cup: 170 }
+];
+
+function formatCups(value) {
+  const cups = Math.floor(value);
+  const rest = value - cups;
+
+  let text = "";
+  if (cups > 0) text += `${cups} كأس`;
+
+  if (rest >= 0.75) text += " + 3/4";
+  else if (rest >= 0.5) text += " + نصف";
+  else if (rest >= 0.25) text += " + ربع";
+
+  return text || "≈ معلقة صغيرة";
 }
-.container{max-width:430px;margin:auto;padding:20px;}
-header{
-  background:#5d4037;
-  color:#fff;
-  padding:25px;
-  border-radius:0 0 30px 30px;
-  text-align:center;
+
+export default function App() {
+  const [type, setType] = useState("dry");
+  const [ingredient, setIngredient] = useState(DRY[0]);
+  const [value, setValue] = useState("");
+
+  const list = type === "dry" ? DRY : LIQUID;
+
+  const result = () => {
+    if (!value) return "";
+    const cups = value / ingredient.cup;
+    return formatCups(cups);
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#fdfbf7",
+      color: "#5D4037",
+      padding: "20px",
+      fontFamily: "sans-serif"
+    }}>
+      <h1 style={{ textAlign: "center" }}>🥄 شحال ندير؟ 🇲🇦</h1>
+      <p style={{ textAlign: "center", opacity: 0.8 }}>
+        Calculateur marocain بالكأس والمعالق
+      </p>
+
+      <div style={{ maxWidth: 400, margin: "auto" }}>
+        <select
+          onChange={(e) => {
+            setType(e.target.value);
+            setIngredient(e.target.value === "dry" ? DRY[0] : LIQUID[0]);
+          }}
+          style={{ width: "100%", padding: 10, marginBottom: 10 }}
+        >
+          <option value="dry">نواشف / Solides</option>
+          <option value="liquid">سوائل / Liquides</option>
+        </select>
+
+        <select
+          onChange={(e) =>
+            setIngredient(list.find(i => i.id === e.target.value))
+          }
+          style={{ width: "100%", padding: 10, marginBottom: 10 }}
+        >
+          {list.map(i => (
+            <option key={i.id} value={i.id}>
+              {i.ar} – {i.fr}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder={type === "dry" ? "الوزن بالغرام" : "الكمية بالمل"}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          style={{ width: "100%", padding: 12, fontSize: 18 }}
+        />
+
+        {value && (
+          <div style={{
+            background: "#fff",
+            marginTop: 20,
+            padding: 15,
+            borderRadius: 10,
+            textAlign: "center"
+          }}>
+            <strong>النتيجة:</strong>
+            <p style={{ fontSize: 20, marginTop: 10 }}>{result()}</p>
+            <small>بصّحة وراحة 👌</small>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
-header h1{margin:0;font-size:26px;}
-header p{margin-top:6px;color:#ffd54f;}
-.card{
-  background:white;
-  margin-top:-20px;
-  padding:20px;
-  border-radius:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,.1);
-}
-label{font-weight:bold;margin-top:15px;display:block;}
-select,input{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:12px;
-  border:2px solid #e0c097;
-  font-size:16px;
-}
-button{
-  width:100%;
-  margin-top:20px;
-  padding:14px;
-  border:none;
-  border-radius:25px;
-  background:#d4a017;
-  font-size:18px;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{background:#c69312;}
-.result{
-  margin-top:25px;
-  padding:18px;
-  background:#fdf6ec;
-  border:2px dashed #d4a017;
-  border-radius:18px;
-  text-align:center;
-  font-size:18px;
-}
-footer{
-  text-align:center;
-  margin-top:20px;
-  font-size:14px;
-  color:#6d4c41;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<header>
-  <h1>الميزان المغربي الذكي 🥄</h1>
-  <p>كأس العنبة… الحساب بلا ميزان 🇲🇦</p>
-</header>
-
-<div class="card">
-
-<label>شنو غادي تحسبي؟</label>
-<select id="type">
-  <option value="dry">ناشف</option>
-  <option value="liquid">سائل (ماء / حليب / زيت)</option>
-</select>
-
-<label>اختاري المكون (للنواشف):</label>
-<select id="ingredient">
-  <option value="110">الدقيق</option>
-  <option value="125">السكر الناعم</option>
-  <option value="150">السكر الخشن (سنيدة)</option>
-  <option value="130">السميد الناعم</option>
-  <option value="100">الكاكاو</option>
-  <option value="75">الحليب بودرة</option>
-  <option value="60">الكوك</option>
-  <option value="110">الزنجلان / السمسم</option>
-  <option value="110">اللوز</option>
-</select>
-
-<label>الكمية (غرام أو ml):</label>
-<input type="number" id="amount" placeholder="مثلاً 10">
-
-<label>نوع المعالق (إلا كانت الكمية قليلة):</label>
-<select id="spoon">
-  <option value="5">معلقة صغيرة 🥄</option>
-  <option value="15">معلقة كبيرة 🍴</option>
-</select>
-
-<button onclick="calculate()">احسبي دابا</button>
-
-<div id="result" class="result" style="display:none;"></div>
-
-</div>
-
-<footer>
-  بصحة وراحة 🌸 الحساب تقريبي بكأس العنبة المغربية
-</footer>
-
-</div>
-
-<script>
-function calculate(){
-  const amount = Number(document.getElementById("amount").value);
-  const cupGram = Number(document.getElementById("ingredient").value);
-  const spoonGram = Number(document.getElementById("spoon").value);
-  const type = document.getElementById("type").value;
-  const result = document.getElementById("result");
-
-  if(!amount || amount<=0){
-    result.style.display="block";
-    result.innerHTML="دخلّي كمية معقولة 😅";
-    return;
-  }
-
-  let cups;
-  let text="";
-
-  if(type==="liquid"){
-    cups = amount / 170;
-  }else{
-    cups = amount / cupGram;
-  }
-
-  if(cups>=1){
-    let full=Math.floor(cups);
-    let rest=cups-full;
-    if(rest>=0.75) text=`${full} كيسان`;
-    else if(rest>=0.5) text=`${full} كاس ونص`;
-    else if(rest>=0.25) text=`${full} كاس وربع`;
-    else text=`${full} كاس`;
-  }else if(cups>=0.5){
-    text="نص كاس";
-  }else if(cups>=0.25){
-    text="ربع كاس";
-  }else{
-    let spoons=Math.round(amount/spoonGram);
-    text=`${spoons} ${spoonGram==5?"معالق صغار 🥄":"معالق كبار 🍴"}`;
-  }
-
-  result.style.display="block";
-  result.innerHTML=`
-  😍 <strong>النتيجة:</strong><br><br>
-  ≈ ${text}<br><br>
-  ${type==="liquid"?"🥛 بالحساب ديال السوائل":"🥄 بالحساب ديال النواشف"}<br>
-  بصحة وراحة… راه حتى القليل محسوب ❤️
-  `;
-}
-</script>
-
-</body>
-</html>
